@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  rpi-image-build:
+    platform: linux/amd64
+    container_name: plant-feeder-build
+    image: plant-feeder-build:latest
+    user: usersetup
+    build:
+      context: .
+      dockerfile: Build.dockerfile
+    working_dir: /home/usersetup/build
+    entrypoint: /bin/bash -c "/home/usersetup/sources/prepare-yocto.sh"
+    volumes:
+      - $PWD/build:/home/usersetup/build
+      - $PWD/sources:/home/usersetup/sources
