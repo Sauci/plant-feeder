@@ -11,7 +11,7 @@ RUN git clone -b $POKY_BRANCH https://git.yoctoproject.org/poky $POKY_BRANCH && 
     git clone -b $POKY_BRANCH https://git.yoctoproject.org/meta-raspberrypi && \
     git clone -b $POKY_BRANCH https://git.openembedded.org/meta-openembedded
 
-FROM crops/poky:ubuntu-22.04 AS image-builder
+FROM crops/poky:ubuntu-20.04 AS image-builder
 
 
 ENV POKY_BRANCH honister
