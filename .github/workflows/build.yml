@@ -28,3 +28,8 @@ jobs:
       - run: chmod +x sources/prepare-yocto.sh
       - run: docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) rpi-image-build
       - run: docker compose run rpi-image-build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: images
+          path: |
+            build/tmp/deploy/images
