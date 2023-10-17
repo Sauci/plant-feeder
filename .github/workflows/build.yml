@@ -13,5 +13,5 @@ jobs:
       - uses: actions/checkout@v3
       - run: mkdir build
       - run: chmod +x sources/prepare-yocto.sh
-      - run: docker compose build rpi-image-build
+      - run: docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) rpi-image-build
       - run: docker compose run rpi-image-build
