@@ -44,6 +44,14 @@ FROM crops/poky:ubuntu-22.04 AS image-builder
 
 ENV POKY_BRANCH honister
 
+ARG UID=70
+ARG GID=70
+
+USER root
+RUN usermod -u "$UID" usersetup
+RUN groupmod -g "$GID" usersetup
+USER usersetup
+
 COPY --from=source-environment /usr/local/src /workdir/
 
 VOLUME /home/usersetup/build
