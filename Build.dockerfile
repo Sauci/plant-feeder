@@ -7,9 +7,9 @@ ENV POKY_BRANCH honister
 WORKDIR /usr/local/src
 
 RUN git clone -b $POKY_BRANCH https://git.yoctoproject.org/poky $POKY_BRANCH && \
-    cd $POKY_BRANCH && \
-    git clone -b $POKY_BRANCH https://git.yoctoproject.org/meta-raspberrypi && \
-    git clone -b $POKY_BRANCH https://git.openembedded.org/meta-openembedded
+    cd /usr/local/src/$POKY_BRANCH && git clone -b $POKY_BRANCH https://git.yoctoproject.org/meta-raspberrypi && \
+    cd /usr/local/src/$POKY_BRANCH && git clone -b $POKY_BRANCH https://git.openembedded.org/meta-openembedded && \
+    cd /usr/local/src/$POKY_BRANCH && git clone -b $POKY_BRANCH https://github.com/ros/meta-ros.git
 
 FROM crops/poky:ubuntu-20.04 AS image-builder
 
