@@ -14,4 +14,4 @@ echo "copying /sources/local.conf into $HOME/build/conf/local.conf"
 cp $HOME/sources/local.conf $HOME/build/conf/local.conf
 
 echo "building core-image-minimal"
-bitbake -k core-image-minimal
+bitbake -k core-image-base
