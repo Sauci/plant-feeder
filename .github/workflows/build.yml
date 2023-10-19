@@ -3,9 +3,38 @@ name: test
 on: [ push, pull_request ]
 
 env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: rpi-image-build
   POKY_BRANCH: honister
 
 jobs:
+  build-docker-image:
+    name: Build Docker image
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v2
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{secrets.PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+      - uses: docker/metadata-action@v4
+        id: meta
+        with:
+          images: ${{env.REGISTRY}}/${{github.repository}}
+      - run: echo "UID=$(id -u)" >> $GITHUB_ENV
+      - run: echo "GID=$(id -g)" >> $GITHUB_ENV
+      - uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: .
+          build-args: |
+            UID=${{ env.UID }}
+            GID=${{ env.GID }}
+          tags: ${{steps.meta.outputs.tags}}
+          labels: ${{steps.meta.outputs.labels}}
+
+
   build-and-push-image:
     name: Build and push image
     runs-on: ubuntu-20.04
