@@ -37,26 +37,31 @@ jobs:
     name: Fetch Yocto dependencies
     runs-on: ubuntu-20.04
     needs: build-docker-image
-#    container:
-#      # TODO: use the correct image here...
-#      image: ghcr.io/sauci/plant-feeder:feature-3
-#      credentials:
-#        username: ${{secrets.PKG_REGISTRY_USERNAME}}
-#        password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-#      volumes:
-#        - ./build:/home/usersetup/build
+    #    container:
+    #      # TODO: use the correct image here...
+    #      image: ghcr.io/sauci/plant-feeder:feature-3
+    #      credentials:
+    #        username: ${{secrets.PKG_REGISTRY_USERNAME}}
+    #        password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+    #      volumes:
+    #        - ./build:/home/usersetup/build
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        id: cache-yocto
+        with:
+          path: build/cache
+          key: ${{ runner.os }}-cache-yocto
       - uses: docker/login-action@v2
         with:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
       - run: mkdir build && docker run -v ./build:/home/usersetup/build ghcr.io/sauci/plant-feeder:feature-3 -c "cd /home/usersetup/sources/ && chmod +x fetch-dependencies.sh && ./fetch-dependencies.sh"
-#      - run: |
-#          cd /home/usersetup/sources/
-#          chmod +x fetch-dependencies.sh
-#          ./fetch-dependencies.sh
+  #      - run: |
+  #          cd /home/usersetup/sources/
+  #          chmod +x fetch-dependencies.sh
+  #          ./fetch-dependencies.sh
   build-yocto-image:
     name: Build Yocto image
     runs-on: ubuntu-20.04
