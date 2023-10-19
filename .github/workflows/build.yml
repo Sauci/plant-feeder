@@ -10,6 +10,8 @@ jobs:
   build-docker-image:
     name: Build Docker image
     runs-on: ubuntu-20.04
+    outputs:
+      docker-image-tag: ${{ steps.export-docker-image-tag.outputs.DOCKER_IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v3
       - uses: docker/login-action@v2
@@ -21,6 +23,8 @@ jobs:
         id: meta
         with:
           images: ${{env.REGISTRY}}/${{github.repository}}
+      - id: export-docker-image-tag
+        run: echo "DOCKER_IMAGE_TAG=${{steps.meta.outputs.tags}}" >> $GITHUB_OUTPUT
       - run: echo "UID=$(id -u)" >> $GITHUB_ENV
       - run: echo "GID=$(id -g)" >> $GITHUB_ENV
       - uses: docker/build-push-action@v4
@@ -37,14 +41,6 @@ jobs:
     name: Fetch Yocto dependencies
     runs-on: ubuntu-20.04
     needs: build-docker-image
-    #    container:
-    #      # TODO: use the correct image here...
-    #      image: ghcr.io/sauci/plant-feeder:feature-3
-    #      credentials:
-    #        username: ${{secrets.PKG_REGISTRY_USERNAME}}
-    #        password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-    #      volumes:
-    #        - ./build:/home/usersetup/build
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache/save@v3
@@ -62,11 +58,7 @@ jobs:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: mkdir build && docker run -v ./build:/home/usersetup/build ghcr.io/sauci/plant-feeder:feature-3 -c "cd /home/usersetup/sources/ && chmod +x fetch-dependencies.sh && ./fetch-dependencies.sh"
-  #      - run: |
-  #          cd /home/usersetup/sources/
-  #          chmod +x fetch-dependencies.sh
-  #          ./fetch-dependencies.sh
+      - run: mkdir build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x fetch-dependencies.sh && ./fetch-dependencies.sh"
   build-yocto-image:
     name: Build Yocto image
     runs-on: ubuntu-20.04
