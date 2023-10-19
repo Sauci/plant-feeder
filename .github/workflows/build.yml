@@ -43,31 +43,23 @@ jobs:
     needs: build-docker-image
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache/save@v3
-        id: cache-yocto-save
-        with:
-          path: build/cache
-          key: ${{ runner.os }}-cache-yocto
-      - uses: actions/cache/restore@v3
-        id: cache-yocto-restore
-        with:
-          path: build/cache
-          key: ${{ runner.os }}-cache-yocto
       - uses: docker/login-action@v2
         with:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
       - run: mkdir build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x fetch-dependencies.sh && ./fetch-dependencies.sh"
+      - uses: actions/cache@v3
+        with:
+          path: build/cache
+          key: cache-yocto-fetch
   build-yocto-image:
     name: Build Yocto image
     runs-on: ubuntu-20.04
-    needs: fetch-yocto-dependencies
+    needs:
+      - build-docker-image
+      - fetch-yocto-dependencies
     steps:
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ${GITHUB_WORKSPACE}/build
       - uses: jlumbroso/free-disk-space@v1.3.0
         with:
           tool-cache: true
@@ -77,8 +69,17 @@ jobs:
           large-packages: true
           docker-images: true
           swap-storage: true
+      - uses: actions/cache@v3
+        with:
+          path: build/cache
+          key: cache-yocto-fetch
       - uses: actions/checkout@v3
-      - run: mkdir build
+      - uses: docker/login-action@v2
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{secrets.PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+      - run: docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
       - run: chmod +x sources/prepare-yocto.sh
       - run: docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) rpi-image-build
       - run: docker compose run rpi-image-build
