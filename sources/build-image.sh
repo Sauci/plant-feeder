@@ -2,9 +2,9 @@
 
 cd /workdir
 
-source $POKY_BRANCH/oe-init-build-env $HOME/build
+mkdir $HOME/build/conf
+cp $HOME/sources/* $HOME/build/conf
 
-cp $HOME/sources/bblayers.conf $HOME/build/conf/bblayers.conf
-cp $HOME/sources/local.conf $HOME/build/conf/local.conf
+source $POKY_BRANCH/oe-init-build-env $HOME/build
 
 bitbake -k core-image-base
