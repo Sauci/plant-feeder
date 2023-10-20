@@ -79,10 +79,7 @@ jobs:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
-      - run: chmod +x sources/prepare-yocto.sh
-      - run: docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) rpi-image-build
-      - run: docker compose run rpi-image-build
+      - run: mkdir build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
       - uses: actions/upload-artifact@v3
         with:
           name: images
