@@ -7,4 +7,4 @@ cp $HOME/sources/* $HOME/build/conf
 
 source $POKY_BRANCH/oe-init-build-env $HOME/build
 
-bitbake -k core-image-base
+bitbake core-image-base
