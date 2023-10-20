@@ -1,6 +1,8 @@
-name: test
+name: Build Yocto image
 
-on: [ push, pull_request ]
+on:
+  - push
+  - pull_request
 
 env:
   REGISTRY: ghcr.io
@@ -34,8 +36,7 @@ jobs:
           build-args: |
             UID=${{ env.UID }}
             GID=${{ env.GID }}
-          tags: |
-            ${{steps.meta.outputs.tags}}
+          tags: ${{steps.meta.outputs.tags}}
           labels: ${{steps.meta.outputs.labels}}
   fetch-yocto-dependencies:
     name: Fetch Yocto dependencies
@@ -43,23 +44,16 @@ jobs:
     needs: build-docker-image
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: ./build
+          key: cache-yocto-fetch
       - uses: docker/login-action@v2
         with:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: mkdir build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x fetch-dependencies.sh && ./fetch-dependencies.sh"
-      - run: ls -l
-      - run: ls -l ./build
-      - uses: actions/cache@v3
-        with:
-          path: ./build
-          key: cache-yocto-fetch
-  #      - uses: actions/upload-artifact@v3
-  #        with:
-  #          name: cache
-  #          path: |
-  #            ./build
+      - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x fetch-dependencies.sh && ./fetch-dependencies.sh"
   build-yocto-image:
     name: Build Yocto image
     runs-on: ubuntu-20.04
@@ -67,15 +61,15 @@ jobs:
       - build-docker-image
       - fetch-yocto-dependencies
     steps:
-      #      - uses: jlumbroso/free-disk-space@v1.3.0
-      #        with:
-      #          tool-cache: true
-      #          android: true
-      #          dotnet: true
-      #          haskell: true
-      #          large-packages: true
-      #          docker-images: true
-      #          swap-storage: true
+      - uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
@@ -86,9 +80,6 @@ jobs:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: ls -l
-      - run: ls -l build
-      - run: ls -l build/cache
       - run: docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
       - uses: actions/upload-artifact@v3
         with:
