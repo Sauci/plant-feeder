@@ -38,8 +38,8 @@ jobs:
             GID=${{ env.GID }}
           tags: ${{steps.meta.outputs.tags}}
           labels: ${{steps.meta.outputs.labels}}
-  build-kernel:
-    name: Build Linux kernel
+  build-glibc:
+    name: Build glibc
     runs-on: ubuntu-20.04
     needs: build-docker-image
     steps:
@@ -56,19 +56,19 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ./build
-          key: cache-linux-kernel
+          key: cache-glibc
       - uses: docker/login-action@v2
         with:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-kernel.sh && ./build-kernel.sh"
+      - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-glibc.sh && ./build-glibc.sh"
   build-yocto-image:
     name: Build Yocto image
     runs-on: ubuntu-20.04
     needs:
       - build-docker-image
-      - build-kernel
+      - build-glibc
     steps:
       - uses: jlumbroso/free-disk-space@v1.3.0
         with:
@@ -83,7 +83,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ./build
-          key: cache-linux-kernel
+          key: cache-glibc
       - uses: docker/login-action@v2
         with:
           registry: ${{env.REGISTRY}}
