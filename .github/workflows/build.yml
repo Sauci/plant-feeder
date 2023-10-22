@@ -1,19 +1,48 @@
-name: test
+name: Build Yocto image
 
-on: [ push, pull_request ]
+on:
+  - push
+  - pull_request
 
 env:
+  REGISTRY: ghcr.io
   POKY_BRANCH: honister
 
 jobs:
-  build-and-push-image:
-    name: Build and push image
+  build-docker-image:
+    name: Build Docker image
     runs-on: ubuntu-20.04
+    outputs:
+      docker-image-tag: ${{ steps.export-docker-image-tag.outputs.DOCKER_IMAGE_TAG }}
     steps:
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v3
+      - uses: docker/login-action@v2
         with:
-          path: |
-            ${GITHUB_WORKSPACE}/build
+          registry: ${{env.REGISTRY}}
+          username: ${{secrets.PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+      - uses: docker/metadata-action@v4
+        id: meta
+        with:
+          images: ${{env.REGISTRY}}/${{github.repository}}
+      - id: export-docker-image-tag
+        run: echo "DOCKER_IMAGE_TAG=${{steps.meta.outputs.tags}}" >> $GITHUB_OUTPUT
+      - run: echo "UID=$(id -u)" >> $GITHUB_ENV
+      - run: echo "GID=$(id -g)" >> $GITHUB_ENV
+      - uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: .
+          build-args: |
+            UID=${{ env.UID }}
+            GID=${{ env.GID }}
+          tags: ${{steps.meta.outputs.tags}}
+          labels: ${{steps.meta.outputs.labels}}
+  build-glibc:
+    name: Build glibc
+    runs-on: ubuntu-20.04
+    needs: build-docker-image
+    steps:
       - uses: jlumbroso/free-disk-space@v1.3.0
         with:
           tool-cache: true
@@ -24,10 +53,43 @@ jobs:
           docker-images: true
           swap-storage: true
       - uses: actions/checkout@v3
-      - run: mkdir build
-      - run: chmod +x sources/prepare-yocto.sh
-      - run: docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g) rpi-image-build
-      - run: docker compose run rpi-image-build
+      - uses: actions/cache@v3
+        with:
+          path: ./build
+          key: cache-glibc
+      - uses: docker/login-action@v2
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{secrets.PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+      - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-glibc.sh && ./build-glibc.sh"
+  build-yocto-image:
+    name: Build Yocto image
+    runs-on: ubuntu-20.04
+    needs:
+      - build-docker-image
+      - build-glibc
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.0
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: ./build
+          key: cache-glibc
+      - uses: docker/login-action@v2
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{secrets.PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+      - run: docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
       - uses: actions/upload-artifact@v3
         with:
           name: images

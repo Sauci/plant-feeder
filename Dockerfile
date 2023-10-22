@@ -13,7 +13,6 @@ RUN git clone -b $POKY_BRANCH https://git.yoctoproject.org/poky $POKY_BRANCH && 
 
 FROM crops/poky:ubuntu-20.04 AS image-builder
 
-
 ENV POKY_BRANCH honister
 
 ARG UID=70
@@ -25,6 +24,7 @@ RUN groupmod -g "$GID" usersetup
 USER usersetup
 
 COPY --from=source-environment /usr/local/src /workdir/
+COPY --chown=usersetup sources /home/usersetup/sources/
 
 VOLUME /home/usersetup/build
 VOLUME /home/usersetup/sources
