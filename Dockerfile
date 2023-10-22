@@ -23,7 +23,7 @@ RUN usermod -u "$UID" usersetup
 RUN groupmod -g "$GID" usersetup
 USER usersetup
 
-COPY --from=source-environment /usr/local/src /workdir/
+COPY --chown=usersetup --from=source-environment /usr/local/src /workdir/
 COPY --chown=usersetup sources /home/usersetup/sources/
 
 VOLUME /home/usersetup/build
