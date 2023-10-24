@@ -8,4 +8,4 @@ cp -r $HOME/sources/meta-watering-can-robot /workdir/$POKY_BRANCH
 
 source $POKY_BRANCH/oe-init-build-env $HOME/build
 
-bitbake watering-can-robot-minimal-image
+bitbake watering-can-robot-image
