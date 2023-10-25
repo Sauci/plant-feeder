@@ -11,7 +11,7 @@ env:
 jobs:
   build-docker-image:
     name: Build Docker image
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     outputs:
       docker-image-tag: ${{ steps.export-docker-image-tag.outputs.DOCKER_IMAGE_TAG }}
     steps:
@@ -40,7 +40,7 @@ jobs:
           labels: ${{steps.meta.outputs.labels}}
   build-glibc:
     name: Build glibc
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     needs: build-docker-image
     steps:
       - uses: jlumbroso/free-disk-space@v1.3.0
@@ -65,7 +65,7 @@ jobs:
       - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-glibc.sh && ./build-glibc.sh"
   build-yocto-image:
     name: Build Yocto image
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     needs:
       - build-docker-image
       - build-glibc
