@@ -38,58 +38,58 @@ jobs:
             GID=${{ env.GID }}
           tags: ${{steps.meta.outputs.tags}}
           labels: ${{steps.meta.outputs.labels}}
-  build-glibc:
-    name: Build glibc
-    runs-on: self-hosted
-    needs: build-docker-image
-    steps:
-      - uses: jlumbroso/free-disk-space@v1.3.0
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: ./build
-          key: cache-glibc
-      - uses: docker/login-action@v2
-        with:
-          registry: ${{env.REGISTRY}}
-          username: ${{secrets.PKG_REGISTRY_USERNAME}}
-          password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-glibc.sh && ./build-glibc.sh"
+  # build-glibc:
+  #   name: Build glibc
+  #   runs-on: self-hosted
+  #   needs: build-docker-image
+  #   steps:
+      # - uses: jlumbroso/free-disk-space@v1.3.0
+      #   with:
+      #     tool-cache: true
+      #     android: true
+      #     dotnet: true
+      #     haskell: true
+      #     large-packages: true
+      #     docker-images: true
+      #     swap-storage: true
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/cache@v3
+  #       with:
+  #         path: ./build
+  #         key: cache-glibc
+  #     - uses: docker/login-action@v2
+  #       with:
+  #         registry: ${{env.REGISTRY}}
+  #         username: ${{secrets.PKG_REGISTRY_USERNAME}}
+  #         password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
+  #     - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-glibc.sh && ./build-glibc.sh"
   build-yocto-image:
     name: Build Yocto image
     runs-on: self-hosted
     needs:
       - build-docker-image
-      - build-glibc
+      # - build-glibc
     steps:
-      - uses: jlumbroso/free-disk-space@v1.3.0
-        with:
-          tool-cache: true
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
+      # - uses: jlumbroso/free-disk-space@v1.3.0
+      #   with:
+      #     tool-cache: true
+      #     android: true
+      #     dotnet: true
+      #     haskell: true
+      #     large-packages: true
+      #     docker-images: true
+      #     swap-storage: true
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: ./build
-          key: cache-glibc
+      # - uses: actions/cache@v3
+      #   with:
+      #     path: ./build
+      #     key: cache-glibc
       - uses: docker/login-action@v2
         with:
           registry: ${{env.REGISTRY}}
           username: ${{secrets.PKG_REGISTRY_USERNAME}}
           password: ${{secrets.PKG_REGISTRY_RW_TOKEN}}
-      - run: docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
+      - run: mkdir -p build && docker run -v ./build:/home/usersetup/build ${{ needs.build-docker-image.outputs.docker-image-tag }} -c "cd /home/usersetup/sources/ && chmod +x build-image.sh && ./build-image.sh"
       - uses: actions/upload-artifact@v3
         with:
           name: images
